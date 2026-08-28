@@ -1,0 +1,20 @@
+{
+  "id": "lobber",
+  "name": "로버",
+  "hp": 14,
+  "speed": 70,
+  "radius": 18,
+  "touchRange": 60,
+  "windupMs": 1500,
+  "attackDamage": 8,
+  "attackCooldownMs": 1500,
+  "cost": 15,
+  "color": "#ffa940",
+  "ranged": {
+    "range": 420,
+    "projectileDamage": 12,
+    "telegraphMs": 1500,
+    "cooldownMs": 2800,
+    "aoeRadius": 80
+  }
+}

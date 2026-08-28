@@ -1,0 +1,7 @@
+{
+  "id": "resolute_ward",
+  "name": "굳은 결의",
+  "desc": "Ward가 막은 공격을 반사한다",
+  "rarity": "rare",
+  "mods": { "wardReflect": true }
+}

@@ -1,0 +1,7 @@
+{
+  "id": "focused_mind",
+  "name": "집중된 정신",
+  "desc": "Focus 채널링 회복량 +12/초",
+  "rarity": "common",
+  "mods": { "focusBonus": 12 }
+}

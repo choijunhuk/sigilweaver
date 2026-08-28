@@ -45,6 +45,8 @@ export interface Projectile {
   alive: boolean;
   /** enemy AOE lob: explodes at target after telegraph (world-time ms) */
   aoe?: { tx: number; ty: number; at: number; radius: number };
+  /** applied to enemies this projectile damages */
+  applyStatus?: { status: string; durationMs: number; dps?: number };
 }
 
 export interface PlayerState {

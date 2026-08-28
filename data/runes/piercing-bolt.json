@@ -1,0 +1,7 @@
+{
+  "id": "piercing_bolt",
+  "name": "꿰뚫는 화살",
+  "desc": "Bolt가 적 1명을 관통한다",
+  "rarity": "common",
+  "mods": { "boltPierce": 1 }
+}

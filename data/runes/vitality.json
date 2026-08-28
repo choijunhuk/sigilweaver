@@ -1,0 +1,10 @@
+{
+  "id": "vitality",
+  "name": "생명력",
+  "desc": "최대 체력 +25, 즉시 25 회복",
+  "rarity": "common",
+  "hooks": [{
+    "trigger": "onAcquire",
+    "action": { "type": "heal", "amount": 25, "maxHpBonus": 25 }
+  }]
+}

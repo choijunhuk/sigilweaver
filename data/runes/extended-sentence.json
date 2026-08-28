@@ -1,0 +1,7 @@
+{
+  "id": "extended_sentence",
+  "name": "연장된 문장",
+  "desc": "인장문 토큰 간격이 2.5초→4초로 늘어난다",
+  "rarity": "common",
+  "gesture": { "phraseGapMs": 4000 }
+}

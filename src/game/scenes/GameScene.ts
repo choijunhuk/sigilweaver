@@ -7,11 +7,14 @@ import type { GestureEvent } from '../../gesture/filter';
 import type { GestureConfig, Sigil } from '../../gesture/types';
 import { CombatWorld, FIELD_H } from '../../combat/world';
 import { WaveSpawner } from '../../combat/spawner';
-import { loadContent } from '../../combat/content';
+import { loadContent, type CombatContent } from '../../combat/content';
+import { RuneEngine } from '../../combat/runes';
+import { PhraseMatcher } from '../../gesture/phrases';
 import { EventBus } from '../../core/events';
 import { Rng } from '../../core/rng';
 import { initAudio, sfx, startBgm, setCombatLayer } from '../../core/audio';
 import { warn } from '../../core/log';
+import type { RuneDef } from '../../data/schemas';
 
 const SIGIL_LABEL: Record<Sigil, string> = {
   BOLT: '☝', WARD: '✊', PULSE: '🖐', ARC: '✌', FOCUS: '🤏', NONE: '',
@@ -44,6 +47,14 @@ export class GameScene extends Phaser.Scene {
   private hitstopUntil = 0;
   private startedAt = 0;
   private focusActive = false;
+  private content!: CombatContent;
+  private matcher!: PhraseMatcher;
+  private runeEngine!: RuneEngine;
+  private runCfg!: GestureConfig;
+  private rng!: Rng;
+  private nextRuneAt = 8; // kills until next rune choice
+  private phraseText!: Phaser.GameObjects.Text;
+  private tokenText!: Phaser.GameObjects.Text;
 
   constructor() {
     super('Game');
@@ -54,11 +65,15 @@ export class GameScene extends Phaser.Scene {
     startBgm();
     setCombatLayer(true);
 
-    const { spells, enemies } = loadContent();
+    this.content = loadContent();
+    const { spells, enemies, phrases } = this.content;
     this.bus = new EventBus();
-    const rng = new Rng((Date.now() % 100000) + 1);
-    this.world = new CombatWorld(spells, enemies, rng, this.bus);
-    this.spawner = new WaveSpawner(this.world, rng);
+    this.rng = new Rng((Date.now() % 100000) + 1);
+    this.world = new CombatWorld(spells, enemies, this.rng, this.bus);
+    this.spawner = new WaveSpawner(this.world, this.rng);
+    this.matcher = new PhraseMatcher(phrases);
+    this.runeEngine = new RuneEngine(this.world, this.bus);
+    this.nextRuneAt = 8;
     this.startedAt = this.time.now;
 
     if (!this.textures.exists('spark')) {
@@ -92,12 +107,23 @@ export class GameScene extends Phaser.Scene {
         fontFamily: 'monospace', fontSize: '20px', color: '#8891ab',
       })
       .setOrigin(0.5);
+    this.phraseText = this.add
+      .text(GAME_WIDTH / 2, SPLIT_Y * 0.3, '', {
+        fontFamily: 'monospace', fontSize: '44px', color: '#f5c26b',
+      })
+      .setOrigin(0.5);
+    this.tokenText = this.add
+      .text(GAME_WIDTH / 2, SPLIT_Y + 26, '', {
+        fontFamily: 'monospace', fontSize: '24px', color: '#8891ab',
+      })
+      .setOrigin(0.5);
 
     this.wireCombatFeedback();
 
-    // input sources
+    // input sources — per-run copy so grammar runes can tune it live (§7)
     const cfg = this.registry.get('gestureConfig') as GestureConfig;
-    this.camSource = new CameraGestureSource(cfg);
+    this.runCfg = { ...cfg };
+    this.camSource = new CameraGestureSource(this.runCfg);
     this.wireSource(this.camSource);
     this.wireSource(this.buttonSource);
     this.camSource.start().catch((e) => {
@@ -132,6 +158,10 @@ export class GameScene extends Phaser.Scene {
         this.particles.emitParticleAt(this.fx(x), this.fy(y), 14);
         this.hitstopUntil = this.time.now + 55; // §13 히트스톱
         if (navigator.vibrate) navigator.vibrate(20);
+        if (this.world.kills >= this.nextRuneAt && this.world.player.alive) {
+          this.nextRuneAt += 12;
+          this.time.delayedCall(400, () => this.offerRunes());
+        }
       }),
       b.on('onWardBlock', ({ x, y }) => {
         sfx.wardBlock();
@@ -157,6 +187,44 @@ export class GameScene extends Phaser.Scene {
     this.castText.setText(SIGIL_LABEL[ev.sigil]);
     if (navigator.vibrate) navigator.vibrate(15);
     this.time.delayedCall(500, () => this.castText.setText(''));
+
+    // §6: sigil also feeds the phrase token buffer
+    const phrase = this.matcher.push(ev.sigil, this.time.now);
+    if (phrase && this.world.castPhrase(phrase.id, phrase.manaCost)) {
+      sfx.phrase();
+      if (navigator.vibrate) navigator.vibrate([40, 40, 80]);
+      this.cameras.main.shake(140, 0.004);
+      this.phraseText.setText(`✦ ${phrase.name} ✦`);
+      this.time.delayedCall(1200, () => this.phraseText.setText(''));
+    }
+  }
+
+  private offerRunes(): void {
+    const pool = this.content.runes.filter(
+      (r) => !this.runeEngine.acquired.some((a) => a.id === r.id),
+    );
+    if (pool.length === 0) return;
+    const picks: RuneDef[] = [];
+    while (picks.length < Math.min(3, pool.length)) {
+      const r = pool[Math.min(pool.length - 1, Math.floor(this.rng.next() * pool.length))];
+      if (!picks.includes(r)) picks.push(r);
+    }
+    this.scene.pause();
+    this.scene.launch('Reward', {
+      runes: picks,
+      onPick: (rune: RuneDef) => {
+        this.runeEngine.add(rune);
+        // grammar runes reach into the live gesture config (§7 문법 룬)
+        const base = this.registry.get('gestureConfig') as GestureConfig;
+        this.runCfg.stableFrames = Math.max(
+          2,
+          base.stableFrames + this.runeEngine.gestureMods.stableFramesDelta,
+        );
+        if (this.runeEngine.gestureMods.phraseGapMs) {
+          this.matcher.maxGapMs = this.runeEngine.gestureMods.phraseGapMs;
+        }
+      },
+    });
   }
 
   update(_time: number, delta: number): void {
@@ -171,6 +239,18 @@ export class GameScene extends Phaser.Scene {
       this.world.update(dt);
       this.spawner.update();
     }
+
+    // enemy mix ramps over the run (§9 난이도 곡선)
+    const sec = (this.time.now - this.startedAt) / 1000;
+    if (sec > 75) this.spawner.mix = ['crawler', 'crawler', 'lobber', 'shellback'];
+    else if (sec > 35) this.spawner.mix = ['crawler', 'crawler', 'lobber'];
+
+    // token buffer + phrase hint (§12)
+    const toks = this.matcher.tokens.map((t) => SIGIL_LABEL[t]).join(' ');
+    const hint = this.matcher.hints(this.time.now)[0];
+    this.tokenText.setText(
+      toks ? `${toks}${hint ? `  →  ${hint.name}` : ''}` : '',
+    );
 
     this.draw();
     this.drawFeedback();
