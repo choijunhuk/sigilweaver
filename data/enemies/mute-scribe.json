@@ -1,0 +1,20 @@
+{
+  "id": "mute_scribe",
+  "name": "침묵의 서기관",
+  "hp": 420,
+  "speed": 0,
+  "radius": 46,
+  "touchRange": 90,
+  "windupMs": 2000,
+  "attackDamage": 20,
+  "attackCooldownMs": 2500,
+  "cost": 999,
+  "color": "#c084fc",
+  "ranged": {
+    "range": 2000,
+    "projectileDamage": 14,
+    "telegraphMs": 1800,
+    "cooldownMs": 3200,
+    "aoeRadius": 95
+  }
+}

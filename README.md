@@ -5,7 +5,12 @@
 전면 카메라 앞에서 실제 손으로 고대 인장(Sigil)을 맺어 마법을 시전한다.
 Phaser 3 + MediaPipe Hand Landmarker + Capacitor.
 
-**현재 상태: Phase 0 — Technical Spike** (실시간 손 추적 + 5종 인장 분류 검증)
+**현재 상태: Phase 5 — Vertical Slice** (방 8개 런 + 보스 + 룬 12종 + 인장문 3종 + 튜토리얼/캘리브레이션 + 저장)
+
+- ☝ Bolt · ✊ Ward · 🖐 Pulse · ✌ Arc · 🤏 Focus — 인식 확정 즉시 발동
+- 인장문(연계): ✌✌ 연쇄 격류 · 🖐✊☝ 화염 창 · ✊✌🖐 뇌우
+- 보스 "침묵의 서기관": 제한 시간 내 봉인 문장을 맺으면 파훼 + 대미지 윈도우
+- 데스크톱 디버그: 키 1~5로 인장 강제 발동
 
 ## 실행
 

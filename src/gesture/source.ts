@@ -2,15 +2,24 @@ import type { NormalizedLandmark } from '@mediapipe/tasks-vision';
 import type { GestureEvent } from './filter';
 import type { Sigil } from './types';
 
+export interface HandSnapshot {
+  landmarks: NormalizedLandmark[];
+  candidate: Sigil;
+  confidence: number;
+  progress: number;
+}
+
 /** Live recognition state, polled by UI every render frame. */
 export interface GestureSnapshot {
   candidate: Sigil;
   confidence: number;
   /** stabilization progress 0..1 (§12 인식 게이지) */
   progress: number;
-  /** latest landmarks for silhouette drawing; null = hand not seen */
+  /** primary hand landmarks; null = no hand seen */
   landmarks: NormalizedLandmark[] | null;
   handSeen: boolean;
+  /** every tracked hand (양손 지원) — primary fields mirror hands[0] */
+  hands: HandSnapshot[];
 }
 
 /**
@@ -26,7 +35,9 @@ export interface GestureSource {
 }
 
 export function emptySnapshot(): GestureSnapshot {
-  return { candidate: 'NONE', confidence: 0, progress: 0, landmarks: null, handSeen: false };
+  return {
+    candidate: 'NONE', confidence: 0, progress: 0, landmarks: null, handSeen: false, hands: [],
+  };
 }
 
 /** Shared listener plumbing for all sources. */

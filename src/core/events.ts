@@ -15,6 +15,15 @@ export interface EventMap {
   onStatusApplied: { status: string; enemyId: number };
   onPhraseCompleted: { phraseId: string };
   onManaChanged: { mana: number; max: number };
+  // run structure
+  onRoomStarted: { index: number; type: string };
+  onRoomCleared: { index: number };
+  onRunCleared: Record<string, never>;
+  // boss (침묵의 서기관 §8)
+  onBossSeal: { tokens: string[]; deadlineMs: number };
+  onBossSealBroken: Record<string, never>;
+  onBossSealFailed: Record<string, never>;
+  onBossPhase: { phase: number };
 }
 
 type Handler<T> = (payload: T) => void;

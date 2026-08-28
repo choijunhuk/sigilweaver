@@ -149,3 +149,63 @@ export const RuneSchema = z.object({
     .optional(),
 });
 export type RuneDef = z.infer<typeof RuneSchema>;
+
+/** Stage / run structure (data/stages/*.json, §9). */
+export const StageSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  rooms: z
+    .array(
+      z.discriminatedUnion('type', [
+        z.object({
+          type: z.literal('combat'),
+          budget: z.number().positive(),
+          mix: z.array(z.string()).min(1),
+          elite: z.boolean().optional(),
+        }),
+        z.object({ type: z.literal('event') }),
+        z.object({ type: z.literal('boss') }),
+      ]),
+    )
+    .min(1),
+});
+export type StageDef = z.infer<typeof StageSchema>;
+export type RoomDef = StageDef['rooms'][number];
+
+/** Event room choices (data/events.json). */
+const EventEffectSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('heal'), amount: z.number().positive() }),
+  z.object({ type: z.literal('maxHp'), amount: z.number().positive() }),
+  z.object({ type: z.literal('manaMax'), amount: z.number().positive() }),
+  z.object({ type: z.literal('damageMult'), mult: z.number().positive() }),
+  z.object({ type: z.literal('hurtRune'), damage: z.number().positive() }),
+]);
+export type EventEffect = z.infer<typeof EventEffectSchema>;
+
+export const EventListSchema = z
+  .array(
+    z.object({
+      id: z.string(),
+      text: z.string(),
+      choices: z
+        .array(z.object({ label: z.string(), effect: EventEffectSchema }))
+        .min(2),
+    }),
+  )
+  .min(1);
+export type EventDef = z.infer<typeof EventListSchema>[number];
+
+/** Persistent save (§18). */
+export const SaveDataSchema = z.object({
+  schemaVersion: z.literal(1),
+  calibrated: z.boolean(),
+  tutorialDone: z.boolean(),
+  bestKills: z.number().nonnegative(),
+  bestRoom: z.number().nonnegative(),
+  cleared: z.boolean(),
+  settings: z.object({
+    relaxedHands: z.boolean(),
+    haptics: z.boolean(),
+  }),
+});
+export type SaveData = z.infer<typeof SaveDataSchema>;
