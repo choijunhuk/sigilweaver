@@ -1,0 +1,8 @@
+{
+  "bolt": { "damage": 10, "speed": 900, "cooldownMs": 350, "radius": 10 },
+  "ward": { "durationMs": 800, "cooldownMs": 1100 },
+  "pulse": { "damage": 4, "radius": 250, "knockback": 420, "cooldownMs": 1800 },
+  "arc": { "damage": 14, "manaCost": 12, "cooldownMs": 500, "chains": 1, "chainRange": 220 },
+  "focus": { "manaPerSec": 22 },
+  "mana": { "max": 60, "regenPerSec": 2 }
+}

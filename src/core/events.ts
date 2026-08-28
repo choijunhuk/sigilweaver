@@ -4,6 +4,17 @@ import type { Sigil } from '../gesture/types';
 export interface EventMap {
   onGestureRecognized: { sigil: Sigil; confidence: number; at: number };
   onSceneChanged: { scene: string };
+  // combat
+  onSpellCast: { sigil: Sigil; x: number; y: number };
+  onSpellHit: { spellTags: string[]; enemyId: number; x: number; y: number; damage: number };
+  onEnemyDeath: { kind: string; enemyId: number; x: number; y: number };
+  onEnemySpawn: { kind: string; enemyId: number };
+  onPlayerHit: { damage: number; hp: number };
+  onPlayerDeath: Record<string, never>;
+  onWardBlock: { x: number; y: number };
+  onStatusApplied: { status: string; enemyId: number };
+  onPhraseCompleted: { phraseId: string };
+  onManaChanged: { mana: number; max: number };
 }
 
 type Handler<T> = (payload: T) => void;
