@@ -8,7 +8,7 @@ export interface EventMap {
   onSpellCast: { sigil: Sigil; x: number; y: number };
   onSpellHit: { spellTags: string[]; enemyId: number; x: number; y: number; damage: number };
   onEnemyDeath: { kind: string; enemyId: number; x: number; y: number };
-  onEnemySpawn: { kind: string; enemyId: number };
+  onEnemySpawn: { kind: string; enemyId: number; x: number; y: number };
   onPlayerHit: { damage: number; hp: number };
   onPlayerDeath: Record<string, never>;
   onWardBlock: { x: number; y: number };

@@ -130,8 +130,10 @@ export class GameScene extends Phaser.Scene {
 
   // ── setup ────────────────────────────────────────────────────────────────
   private buildDisplay(): void {
+    this.buildAtmosphere();
     this.gfx = this.add.graphics();
     this.vfx = new VfxSystem(this);
+    this.buildVignette();
     this.add.rectangle(GAME_WIDTH / 2, SPLIT_Y, GAME_WIDTH, 2, 0x2a2f45);
     this.feedbackGfx = this.add.graphics();
 
@@ -151,6 +153,61 @@ export class GameScene extends Phaser.Scene {
         this.add.text(0, 0, '', mono(20, '#ffd27d')).setOrigin(0.5).setVisible(false),
       );
     }
+  }
+
+  /** 배경 분위기 (§13 미니멀 다크 판타지): 떠다니는 룬 문자 + 마나 먼지 */
+  private buildAtmosphere(): void {
+    const glyphs = 'ᚠᚢᚦᚨᚱᚲᛃᛇᛒᛗᛟᛞ';
+    for (let i = 0; i < 9; i++) {
+      const t = this.add
+        .text(
+          40 + Math.random() * (GAME_WIDTH - 80),
+          40 + Math.random() * (SPLIT_Y - 120),
+          glyphs[Math.floor(Math.random() * glyphs.length)],
+          { fontFamily: 'serif', fontSize: `${22 + Math.random() * 22}px`, color: '#7c6cff' },
+        )
+        .setAlpha(0.05 + Math.random() * 0.06)
+        .setOrigin(0.5);
+      this.tweens.add({
+        targets: t,
+        y: t.y - 40 - Math.random() * 50,
+        alpha: 0.02,
+        duration: 7000 + Math.random() * 7000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'sine.inout',
+        delay: Math.random() * 4000,
+      });
+    }
+    // slow-drifting mana dust rising through the battlefield
+    VfxSystem.ensureTextures(this);
+    this.add.particles(0, 0, 'vfx-glow', {
+      x: { min: 0, max: GAME_WIDTH },
+      y: { min: SPLIT_Y - 40, max: SPLIT_Y },
+      lifespan: 9000,
+      speedY: { min: -34, max: -12 },
+      speedX: { min: -6, max: 6 },
+      scale: { start: 0.16, end: 0.05 },
+      alpha: { start: 0.16, end: 0 },
+      tint: 0x7c6cff,
+      frequency: 420,
+      blendMode: 'ADD',
+    });
+  }
+
+  private buildVignette(): void {
+    const key = 'vignette';
+    if (!this.textures.exists(key)) {
+      const c = this.textures.createCanvas(key, 360, 640)!;
+      const ctx = c.context;
+      const grad = ctx.createRadialGradient(180, 320, 130, 180, 320, 420);
+      grad.addColorStop(0, 'rgba(11,14,20,0)');
+      grad.addColorStop(1, 'rgba(3,5,9,0.35)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 360, 640);
+      c.refresh();
+    }
+    this.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2, key).setDisplaySize(GAME_WIDTH, GAME_HEIGHT);
   }
 
   private wireSource(source: GestureSource): void {
@@ -185,6 +242,15 @@ export class GameScene extends Phaser.Scene {
         sfx.wardBlock();
         this.vfx.impact(this.fx(x), this.fy(y), COLOR.ward, 6);
         this.vfx.shockwave(this.fx(x), this.fy(y), 46, COLOR.ward, 3);
+      }),
+      b.on('onEnemySpawn', ({ kind, x, y }) => {
+        if (y < 0) return; // walked in from offscreen — no telegraph needed
+        const def = this.content.enemies.get(kind);
+        const color = def
+          ? Phaser.Display.Color.HexStringToColor(def.color).color
+          : COLOR.arcane;
+        this.vfx.materialize(this.fx(x), this.fy(y), color);
+        sfx.spawn();
       }),
       b.on('onLightning', ({ x1, y1, x2, y2 }) => {
         this.vfx.lightning(this.fx(x1), this.fy(y1), this.fx(x2), this.fy(y2));

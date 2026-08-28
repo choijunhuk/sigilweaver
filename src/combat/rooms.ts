@@ -69,13 +69,14 @@ export class RoomController {
       // elite room: one big shellback up front (§9)
       if (room.elite && !this.eliteSpawned) {
         this.eliteSpawned = true;
-        const e = this.world.spawn('shellback');
+        const e = this.world.spawn('shellback', undefined, 140, 900);
         e.hp *= 3;
         this.budgetLeft -= e.def.cost;
       }
       if (this.budgetLeft > 0 && this.world.t >= this.nextSpawnAt) {
         const kind = this.rng.pick(room.mix);
-        const e = this.world.spawn(kind);
+        // in-field materialize spawn — telegraphed appearance (§4)
+        const e = this.world.spawn(kind, undefined, 60 + this.rng.next() * 200, 800);
         this.budgetLeft -= e.def.cost;
         // spawn pacing tightens as the room drains
         const p = this.budgetLeft / room.budget;

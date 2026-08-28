@@ -41,8 +41,8 @@ export class VfxSystem {
   private embers: Phaser.GameObjects.Particles.ParticleEmitter;
   private effects: Effect[] = [];
 
-  constructor(private scene: Phaser.Scene) {
-    this.makeTextures();
+  constructor(scene: Phaser.Scene) {
+    VfxSystem.ensureTextures(scene);
 
     // impact / trail glow puffs
     this.glow = scene.add.particles(0, 0, 'vfx-glow', {
@@ -66,10 +66,10 @@ export class VfxSystem {
     this.gfx = scene.add.graphics().setBlendMode(Phaser.BlendModes.ADD);
   }
 
-  private makeTextures(): void {
-    if (!this.scene.textures.exists('vfx-glow')) {
+  static ensureTextures(scene: Phaser.Scene): void {
+    if (!scene.textures.exists('vfx-glow')) {
       // soft radial glow — concentric alpha rings fake a gaussian falloff
-      const g = this.scene.make.graphics({ x: 0, y: 0 }, false);
+      const g = scene.make.graphics({ x: 0, y: 0 }, false);
       for (let i = 8; i >= 1; i--) {
         g.fillStyle(0xffffff, 0.09 * (9 - i) / 8 + 0.02);
         g.fillCircle(16, 16, i * 2);
@@ -77,8 +77,8 @@ export class VfxSystem {
       g.generateTexture('vfx-glow', 32, 32);
       g.destroy();
     }
-    if (!this.scene.textures.exists('vfx-spark')) {
-      const g = this.scene.make.graphics({ x: 0, y: 0 }, false);
+    if (!scene.textures.exists('vfx-spark')) {
+      const g = scene.make.graphics({ x: 0, y: 0 }, false);
       g.fillStyle(0xffffff, 1);
       g.fillCircle(3, 3, 3);
       g.fillStyle(0xffffff, 0.35);
@@ -138,6 +138,15 @@ export class VfxSystem {
     this.effects.push({ kind: 'flash', x, y, r: radius * 0.85, ttl: 280, age: 0, color });
     this.shockwave(x, y, radius * 1.25, color, 4);
     this.burst(x, y, color, 20);
+  }
+
+  /** enemy spawn telegraph: ring converges inward, then a soft pop */
+  materialize(x: number, y: number, color: number, durationMs = 800): void {
+    this.effects.push({
+      kind: 'shockwave', x, y, r0: 90, r1: 8, ttl: durationMs, age: 0, color, width: 3,
+    });
+    this.effects.push({ kind: 'flash', x, y, r: 30, ttl: durationMs, age: 0, color });
+    this.impact(x, y, color, 3);
   }
 
   // ── frame ────────────────────────────────────────────────────────────────

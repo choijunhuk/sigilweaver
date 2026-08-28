@@ -78,9 +78,9 @@ export class BossController {
     if (w.t >= this.nextSummonAt) {
       const interval = this.phase === 1 ? 9000 : this.phase === 2 ? 7000 : 5500;
       this.nextSummonAt = w.t + interval;
-      w.spawn('crawler', 80 + this.rng.next() * (FIELD_W - 160), 60);
-      if (this.phase >= 2) w.spawn('lobber', 80 + this.rng.next() * (FIELD_W - 160), 40);
-      if (this.phase >= 3) w.spawn('crawler', 80 + this.rng.next() * (FIELD_W - 160), 60);
+      w.spawn('crawler', 80 + this.rng.next() * (FIELD_W - 160), 60, 800);
+      if (this.phase >= 2) w.spawn('lobber', 80 + this.rng.next() * (FIELD_W - 160), 40, 800);
+      if (this.phase >= 3) w.spawn('crawler', 80 + this.rng.next() * (FIELD_W - 160), 60, 800);
     }
   }
 

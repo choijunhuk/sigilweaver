@@ -98,6 +98,9 @@ export const sfx = {
   uiPick(): void {
     tone(740, 0.1, 'triangle', 0.18);
   },
+  spawn(): void {
+    sweep(260, 90, 0.22, 'triangle');
+  },
 };
 
 /** Dark ambient BGM: slow detuned drone + combat layer (§13 수직 레이어링). */

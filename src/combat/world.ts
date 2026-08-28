@@ -59,7 +59,7 @@ export class CombatWorld {
     return this.enemies.filter((e) => e.alive);
   }
 
-  spawn(kind: string, x?: number, y?: number): Enemy {
+  spawn(kind: string, x?: number, y?: number, materializeMs = 0): Enemy {
     const def = this.enemyDefs.get(kind);
     if (!def) throw new Error(`unknown enemy kind: ${kind}`);
     let enemy = this.enemies.find((e) => !e.alive);
@@ -73,8 +73,9 @@ export class CombatWorld {
       x: x ?? 40 + this.rng.next() * (FIELD_W - 80),
       y: y ?? -30,
       hp: def.hp,
-      state: 'move',
-      stateUntil: 0,
+      // materializing enemies hold still briefly — spawn telegraph (§4)
+      state: materializeMs > 0 ? 'stagger' : 'move',
+      stateUntil: this.t + materializeMs,
       attackReadyAt: 0,
       knockX: 0,
       knockY: 0,
@@ -82,7 +83,7 @@ export class CombatWorld {
       shieldUp: !!def.frontShield,
       alive: true,
     } satisfies Partial<Enemy> as Enemy);
-    this.bus.emit('onEnemySpawn', { kind, enemyId: enemy.id });
+    this.bus.emit('onEnemySpawn', { kind, enemyId: enemy.id, x: enemy.x, y: enemy.y });
     return enemy;
   }
 
