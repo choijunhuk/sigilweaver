@@ -16,6 +16,11 @@ import { initAudio, sfx, startBgm, setCombatLayer } from '../../core/audio';
 import { warn } from '../../core/log';
 import { loadSave, updateSave } from '../../meta/save';
 import type { EventEffect, RuneDef } from '../../data/schemas';
+import { VfxSystem } from '../vfx';
+
+const COLOR = {
+  fire: 0xff8c42, lightning: 0x9be8ff, arcane: 0x7c6cff, ward: 0x5dd8ff,
+};
 
 const SIGIL_LABEL: Record<Sigil, string> = {
   BOLT: '☝', WARD: '✊', PULSE: '🖐', ARC: '✌', FOCUS: '🤏', NONE: '',
@@ -63,7 +68,7 @@ export class GameScene extends Phaser.Scene {
   private tokenText!: Phaser.GameObjects.Text;
   private bannerText!: Phaser.GameObjects.Text;
   private sealText!: Phaser.GameObjects.Text;
-  private particles!: Phaser.GameObjects.Particles.ParticleEmitter;
+  private vfx!: VfxSystem;
   private dmgTexts: Phaser.GameObjects.Text[] = [];
   private disposers: (() => void)[] = [];
   private seal: { tokens: string[]; deadline: number } | null = null;
@@ -125,17 +130,8 @@ export class GameScene extends Phaser.Scene {
 
   // ── setup ────────────────────────────────────────────────────────────────
   private buildDisplay(): void {
-    if (!this.textures.exists('spark')) {
-      const g = this.make.graphics({ x: 0, y: 0 }, false);
-      g.fillStyle(0xffffff, 1);
-      g.fillCircle(4, 4, 4);
-      g.generateTexture('spark', 8, 8);
-      g.destroy();
-    }
-    this.particles = this.add.particles(0, 0, 'spark', {
-      speed: { min: 60, max: 220 }, lifespan: 450, scale: { start: 1, end: 0 }, emitting: false,
-    });
     this.gfx = this.add.graphics();
+    this.vfx = new VfxSystem(this);
     this.add.rectangle(GAME_WIDTH / 2, SPLIT_Y, GAME_WIDTH, 2, 0x2a2f45);
     this.feedbackGfx = this.add.graphics();
 
@@ -167,18 +163,44 @@ export class GameScene extends Phaser.Scene {
       b.on('onSpellHit', ({ x, y, damage, spellTags }) => {
         if (spellTags.includes('status')) return;
         sfx.hit();
-        this.particles.emitParticleAt(this.fx(x), this.fy(y), 3);
+        const color = spellTags.includes('lightning')
+          ? COLOR.lightning
+          : spellTags.includes('fire')
+            ? COLOR.fire
+            : COLOR.arcane;
+        this.vfx.impact(this.fx(x), this.fy(y), color);
         this.popDamage(x, y, damage);
       }),
-      b.on('onEnemyDeath', ({ x, y }) => {
+      b.on('onEnemyDeath', ({ x, y, kind }) => {
         sfx.enemyDeath();
-        this.particles.emitParticleAt(this.fx(x), this.fy(y), 14);
+        const def = this.content.enemies.get(kind);
+        const color = def
+          ? Phaser.Display.Color.HexStringToColor(def.color).color
+          : COLOR.arcane;
+        this.vfx.burst(this.fx(x), this.fy(y), color, kind === 'mute_scribe' ? 60 : 16);
         this.hitstopUntil = this.time.now + 55;
         this.vibrate(20);
       }),
       b.on('onWardBlock', ({ x, y }) => {
         sfx.wardBlock();
-        this.particles.emitParticleAt(this.fx(x), this.fy(y), 6);
+        this.vfx.impact(this.fx(x), this.fy(y), COLOR.ward, 6);
+        this.vfx.shockwave(this.fx(x), this.fy(y), 46, COLOR.ward, 3);
+      }),
+      b.on('onLightning', ({ x1, y1, x2, y2 }) => {
+        this.vfx.lightning(this.fx(x1), this.fy(y1), this.fx(x2), this.fy(y2));
+      }),
+      b.on('onExplosion', ({ x, y, radius }) => {
+        this.vfx.explosion(this.fx(x), this.fy(y), radius * 0.83);
+        this.cameras.main.shake(90, 0.003);
+      }),
+      b.on('onSpellCast', ({ sigil, x, y }) => {
+        if (sigil === 'PULSE') {
+          this.vfx.shockwave(
+            this.fx(x), this.fy(y), this.world.spells.pulse.radius * 0.83, COLOR.arcane,
+          );
+        } else if (sigil === 'BOLT') {
+          this.vfx.impact(this.fx(x), this.fy(y) - 20, COLOR.fire, 3);
+        }
       }),
       b.on('onPlayerHit', () => {
         sfx.playerHit();
@@ -197,6 +219,11 @@ export class GameScene extends Phaser.Scene {
         this.seal = null;
         this.sealText.setText('');
         this.phraseText.setText('✦ 봉인 파훼! ✦');
+        const bossE = this.world.aliveEnemies.find((e) => e.def.id === 'mute_scribe');
+        if (bossE) {
+          this.vfx.explosion(this.fx(bossE.x), this.fy(bossE.y), 160, 0xc084fc);
+          this.vfx.shockwave(this.fx(bossE.x), this.fy(bossE.y), 420, 0xc084fc, 8);
+        }
         this.cameras.main.flash(160, 192, 132, 252, false);
         this.vibrate([50, 40, 100]);
         this.time.delayedCall(1200, () => this.phraseText.setText(''));
@@ -431,6 +458,7 @@ export class GameScene extends Phaser.Scene {
       this.sealText.setText(`봉인 문장  ${icons}   ${left.toFixed(1)}s`);
     }
 
+    this.vfx.update(delta);
     this.draw();
     this.drawFeedback();
     this.drawHud();
@@ -519,10 +547,15 @@ export class GameScene extends Phaser.Scene {
         continue;
       }
       const color = p.friendly ? 0xffa940 : 0xff5d5d;
-      g.fillStyle(color, 1);
+      g.fillStyle(0xffffff, 0.9);
+      g.fillCircle(this.fx(p.x), this.fy(p.y), p.radius * 0.4);
+      g.fillStyle(color, 0.8);
       g.fillCircle(this.fx(p.x), this.fy(p.y), p.radius * 0.7);
       g.lineStyle(1, color, 0.35);
       g.strokeCircle(this.fx(p.x), this.fy(p.y), p.radius * 1.4);
+      if (p.friendly) {
+        this.vfx.trail(this.fx(p.x), this.fy(p.y), p.tags.includes('fire') ? COLOR.fire : COLOR.arcane);
+      }
     }
 
     // boss hp bar
