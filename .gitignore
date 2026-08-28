@@ -3,3 +3,4 @@ dist/
 public/wasm/
 public/models/
 .DS_Store
+.omc/
