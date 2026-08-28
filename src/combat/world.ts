@@ -413,7 +413,8 @@ export class CombatWorld {
       this.bus.emit('onWardBlock', { x: e.x, y: e.y + e.def.radius });
       return;
     }
-    const dealt = amount * this.mods.damageMult;
+    let dealt = amount * this.mods.damageMult;
+    if (e.statuses.has('vulnerable')) dealt *= 2;
     e.hp -= dealt;
     if (!silent) {
       this.bus.emit('onSpellHit', {
@@ -445,6 +446,11 @@ export class CombatWorld {
         if (e.alive && this.mods.shockOnExplosion) this.applyStatus(e, 'shock', 4000);
       }
     }
+  }
+
+  /** field-wide boss blast — blockable by a well-timed ward (§8 봉인 실패) */
+  bossBlast(dmg: number): void {
+    this.hitPlayer(dmg, null);
   }
 
   private hitPlayer(dmg: number, attacker: Enemy | null): void {

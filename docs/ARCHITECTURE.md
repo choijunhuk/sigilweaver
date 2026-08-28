@@ -18,7 +18,18 @@
 - 시스템 간 통신은 타입 정의된 EventBus 하나.
 - 콘텐츠는 `data/` JSON (zod 검증), 코드에 하드코딩 금지.
 
-## 현재 구조 (Phase 1 완료)
+## 현재 구조 (Phase 5 — Vertical Slice)
+
+Phase 3~5 추가분: `src/combat/` — 순수 헤드리스 전투 시뮬레이션
+(`world` 엔티티/스펠/상태이상, `rooms` 방 8개 런 구조, `boss` 침묵의 서기관
+봉인 기믹, `runes` 데이터 훅 실행기, `content` zod 로더),
+`src/meta/save.ts` (schemaVersion + 마이그레이션 체인),
+`src/core/audio.ts` (WebAudio 신스 SFX + 앰비언트 BGM 수직 레이어링),
+씬: Boot→Calibration→Menu→Game(방 진행+튜토리얼)→Reward/Event 오버레이→Result.
+콘텐츠는 전부 `data/` JSON: spells, enemies 4종, phrases 3종, runes 12종,
+events 3종, stages/chapter1.
+
+## Phase 1 시점 구조
 
 ```
 src/

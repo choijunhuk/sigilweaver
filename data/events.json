@@ -1,0 +1,26 @@
+[
+  {
+    "id": "silent_shrine",
+    "text": "침묵의 제단. 오래된 문자가 희미하게 빛난다.",
+    "choices": [
+      { "label": "기도한다 — 체력 30 회복", "effect": { "type": "heal", "amount": 30 } },
+      { "label": "문자를 새긴다 — 최대 마나 +15", "effect": { "type": "manaMax", "amount": 15 } }
+    ]
+  },
+  {
+    "id": "broken_scribe",
+    "text": "부서진 서기관의 잔해. 손끝에 온기가 남아 있다.",
+    "choices": [
+      { "label": "잔해를 뒤진다 — 피해 20, 무작위 룬 획득", "effect": { "type": "hurtRune", "damage": 20 } },
+      { "label": "조용히 지나간다 — 체력 10 회복", "effect": { "type": "heal", "amount": 10 } }
+    ]
+  },
+  {
+    "id": "resonant_glyph",
+    "text": "공명하는 문자. 만지면 손의 감각이 예리해질 것 같다.",
+    "choices": [
+      { "label": "만진다 — 모든 피해 +15%", "effect": { "type": "damageMult", "mult": 1.15 } },
+      { "label": "흡수한다 — 최대 체력 +15", "effect": { "type": "maxHp", "amount": 15 } }
+    ]
+  }
+]

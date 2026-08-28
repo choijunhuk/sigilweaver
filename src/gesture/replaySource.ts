@@ -34,6 +34,7 @@ export class ReplayGestureSource extends BaseGestureSource {
         progress: filter.progress,
         landmarks,
         handSeen: true,
+        hands: [{ landmarks, candidate: cls.sigil, confidence: cls.confidence, progress: filter.progress }],
       };
       if (ev) {
         events.push(ev);
@@ -61,6 +62,7 @@ export class ReplayGestureSource extends BaseGestureSource {
           progress: filter.progress,
           landmarks,
           handSeen: true,
+        hands: [{ landmarks, candidate: cls.sigil, confidence: cls.confidence, progress: filter.progress }],
         };
         if (ev) this.fire(ev);
       }

@@ -14,7 +14,8 @@ const INFER_INTERVAL_MS = 1000 / 24; // §15: inference throttled, decoupled fro
 export class CameraGestureSource extends BaseGestureSource {
   private video: HTMLVideoElement | null = null;
   private tracker: HandLandmarker | null = null;
-  private filter: TemporalFilter;
+  /** independent FSM per hand so 양손 교대 casting works (§3) */
+  private filters = new Map<'Left' | 'Right', TemporalFilter>();
   private rafId = 0;
   private lastInferAt = 0;
   private lastHandSeenAt = 0;
@@ -26,7 +27,8 @@ export class CameraGestureSource extends BaseGestureSource {
 
   constructor(private cfg: GestureConfig) {
     super();
-    this.filter = new TemporalFilter(cfg);
+    this.filters.set('Left', new TemporalFilter(cfg));
+    this.filters.set('Right', new TemporalFilter(cfg));
   }
 
   async start(): Promise<void> {
@@ -58,31 +60,54 @@ export class CameraGestureSource extends BaseGestureSource {
       this.lastFpsAt = now;
     }
 
-    const landmarks = result.landmarks[0];
-    if (!landmarks) {
-      this.filter.update({ sigil: 'NONE', confidence: 0 }, now);
+    if (result.landmarks.length === 0) {
+      for (const f of this.filters.values()) f.update({ sigil: 'NONE', confidence: 0 }, now);
       this.snapshot = {
         candidate: 'NONE',
         confidence: 0,
         progress: 0,
         landmarks: null,
         handSeen: now - this.lastHandSeenAt < 1000,
+        hands: [],
       };
       return;
     }
 
     this.lastHandSeenAt = now;
-    const handedness = (result.handedness[0]?.[0]?.categoryName ?? 'Right') as 'Left' | 'Right';
-    const cls = classify(extractFeatures(landmarks, handedness), this.cfg);
-    const ev = this.filter.update(cls, now);
+    const hands: typeof this.snapshot.hands = [];
+    const seen = new Set<'Left' | 'Right'>();
+    for (let i = 0; i < result.landmarks.length; i++) {
+      const landmarks = result.landmarks[i];
+      const handedness = (result.handedness[i]?.[0]?.categoryName ?? 'Right') as 'Left' | 'Right';
+      if (seen.has(handedness)) continue; // duplicate label — keep the first
+      seen.add(handedness);
+      const filter = this.filters.get(handedness)!;
+      const cls = classify(extractFeatures(landmarks, handedness), this.cfg);
+      const ev = filter.update(cls, now);
+      hands.push({
+        landmarks,
+        candidate: filter.currentCandidate,
+        confidence: cls.confidence,
+        progress: filter.progress,
+      });
+      if (ev) this.fire(ev);
+    }
+    // idle the filter of a hand that left the frame
+    for (const [label, f] of this.filters) {
+      if (!seen.has(label)) f.update({ sigil: 'NONE', confidence: 0 }, now);
+    }
+
+    // primary = the hand closest to confirming
+    hands.sort((a, b) => b.progress - a.progress || b.confidence - a.confidence);
+    const primary = hands[0];
     this.snapshot = {
-      candidate: this.filter.currentCandidate,
-      confidence: cls.confidence,
-      progress: this.filter.progress,
-      landmarks,
+      candidate: primary.candidate,
+      confidence: primary.confidence,
+      progress: primary.progress,
+      landmarks: primary.landmarks,
       handSeen: true,
+      hands,
     };
-    if (ev) this.fire(ev);
   }
 
   stop(): void {

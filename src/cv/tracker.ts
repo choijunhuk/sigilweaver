@@ -9,7 +9,7 @@ export async function createTracker(): Promise<HandLandmarker> {
       delegate: 'GPU',
     },
     runningMode: 'VIDEO',
-    numHands: 1,
+    numHands: 2, // 양손 교대 지원 (§3)
     minHandDetectionConfidence: 0.5,
     minHandPresenceConfidence: 0.5,
     minTrackingConfidence: 0.5,

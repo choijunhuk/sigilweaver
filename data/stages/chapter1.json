@@ -1,0 +1,14 @@
+{
+  "id": "chapter1",
+  "name": "침묵의 문턱",
+  "rooms": [
+    { "type": "combat", "budget": 60, "mix": ["crawler"] },
+    { "type": "combat", "budget": 100, "mix": ["crawler", "crawler", "lobber"] },
+    { "type": "event" },
+    { "type": "combat", "budget": 140, "mix": ["crawler", "lobber", "shellback"] },
+    { "type": "combat", "budget": 160, "mix": ["crawler", "lobber", "shellback"], "elite": true },
+    { "type": "event" },
+    { "type": "combat", "budget": 200, "mix": ["crawler", "crawler", "lobber", "shellback"] },
+    { "type": "boss" }
+  ]
+}
