@@ -11,8 +11,8 @@ export class WaveSpawner {
   constructor(
     private world: CombatWorld,
     private rng: Rng,
-    /** enemy kinds to draw from, weighted by repetition */
-    private mix: string[] = ['crawler'],
+    /** enemy kinds to draw from, weighted by repetition; scene may swap it live */
+    public mix: string[] = ['crawler'],
     /** spawn interval range [startMs, floorMs]; ramps down over rampMs */
     private startMs = 2200,
     private floorMs = 800,

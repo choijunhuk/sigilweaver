@@ -72,3 +72,80 @@ export const EnemySchema = z.object({
   frontShield: z.boolean().optional(),
 });
 export type EnemyDef = z.infer<typeof EnemySchema>;
+
+const SigilToken = z.enum(['BOLT', 'WARD', 'PULSE', 'ARC', 'FOCUS']);
+
+/** Sigil phrase (data/phrases.json). 2-3 tokens (§6). */
+export const PhraseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  tokens: z.array(SigilToken).min(2).max(3),
+  manaCost: z.number().nonnegative(),
+});
+export type PhraseDef = z.infer<typeof PhraseSchema>;
+export const PhraseListSchema = z.array(PhraseSchema).min(1);
+
+/** Rune hook actions — the small executor vocabulary (§7). */
+const RuneActionSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('applyStatus'),
+    status: z.enum(['burn', 'shock']),
+    durationMs: z.number().positive(),
+    dps: z.number().optional(),
+  }),
+  z.object({
+    type: z.literal('explode'),
+    radius: z.number().positive(),
+    damage: z.number().positive(),
+    tags: z.array(z.string()),
+  }),
+  z.object({
+    type: z.literal('heal'),
+    amount: z.number().nonnegative(),
+    maxHpBonus: z.number().optional(),
+  }),
+]);
+export type RuneAction = z.infer<typeof RuneActionSchema>;
+
+export const RuneSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  desc: z.string(),
+  rarity: z.enum(['common', 'rare']),
+  hooks: z
+    .array(
+      z.object({
+        trigger: z.enum(['onSpellHit', 'onEnemyDeath', 'onWardBlock', 'onAcquire']),
+        condition: z
+          .object({
+            spellTag: z.string().optional(),
+            status: z.string().optional(),
+            enemyKind: z.string().optional(),
+          })
+          .optional(),
+        action: RuneActionSchema,
+      }),
+    )
+    .optional(),
+  /** static numeric/bool merges into world.mods */
+  mods: z
+    .object({
+      boltPierce: z.number().optional(),
+      boltSplit: z.boolean().optional(),
+      arcChains: z.number().optional(),
+      wardReflect: z.boolean().optional(),
+      shockOnExplosion: z.boolean().optional(),
+      manaMaxBonus: z.number().optional(),
+      focusBonus: z.number().optional(),
+      damageMult: z.number().optional(),
+    })
+    .optional(),
+  /** grammar runes: live gesture-system tuning (§7 문법 룬) */
+  gesture: z
+    .object({
+      stableFramesDelta: z.number().int().optional(),
+      phraseGapMs: z.number().positive().optional(),
+    })
+    .optional(),
+});
+export type RuneDef = z.infer<typeof RuneSchema>;

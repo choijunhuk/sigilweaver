@@ -1,0 +1,20 @@
+[
+  {
+    "id": "chain_surge",
+    "name": "연쇄 격류",
+    "tokens": ["ARC", "ARC"],
+    "manaCost": 12
+  },
+  {
+    "id": "fire_lance",
+    "name": "화염 창",
+    "tokens": ["PULSE", "WARD", "BOLT"],
+    "manaCost": 25
+  },
+  {
+    "id": "thunderstorm",
+    "name": "뇌우",
+    "tokens": ["WARD", "ARC", "PULSE"],
+    "manaCost": 30
+  }
+]

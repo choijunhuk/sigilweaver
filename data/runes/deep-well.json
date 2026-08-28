@@ -1,0 +1,7 @@
+{
+  "id": "deep_well",
+  "name": "깊은 샘",
+  "desc": "최대 마나 +30",
+  "rarity": "common",
+  "mods": { "manaMaxBonus": 30 }
+}

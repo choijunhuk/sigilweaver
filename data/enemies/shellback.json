@@ -1,0 +1,14 @@
+{
+  "id": "shellback",
+  "name": "셸백",
+  "hp": 40,
+  "speed": 55,
+  "radius": 24,
+  "touchRange": 70,
+  "windupMs": 1800,
+  "attackDamage": 16,
+  "attackCooldownMs": 1800,
+  "cost": 25,
+  "color": "#b8c4e0",
+  "frontShield": true
+}

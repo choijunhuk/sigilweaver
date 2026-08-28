@@ -1,0 +1,7 @@
+{
+  "id": "bloom",
+  "name": "개화",
+  "desc": "Arc가 2회 더 연쇄한다",
+  "rarity": "rare",
+  "mods": { "arcChains": 2 }
+}

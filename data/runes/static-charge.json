@@ -1,0 +1,7 @@
+{
+  "id": "static_charge",
+  "name": "정전기 충전",
+  "desc": "폭발이 적에게 감전을 부여한다 (Arc 데미지 2배)",
+  "rarity": "rare",
+  "mods": { "shockOnExplosion": true }
+}

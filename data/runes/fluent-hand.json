@@ -1,0 +1,7 @@
+{
+  "id": "fluent_hand",
+  "name": "유창한 손",
+  "desc": "인장 안정화가 빨라진다 (4→3프레임)",
+  "rarity": "rare",
+  "gesture": { "stableFramesDelta": -1 }
+}

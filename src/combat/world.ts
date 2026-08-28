@@ -193,6 +193,84 @@ export class CombatWorld {
 
     for (const e of this.enemies) if (e.alive) this.updateEnemy(e, dt);
     for (const p of this.projectiles) if (p.alive) this.updateProjectile(p, dt);
+
+    // scheduled effects (thunderstorm strikes etc.)
+    for (let i = this.scheduled.length - 1; i >= 0; i--) {
+      if (this.t >= this.scheduled[i].at) {
+        const fn = this.scheduled[i].fn;
+        this.scheduled.splice(i, 1);
+        fn();
+      }
+    }
+  }
+
+  private scheduled: { at: number; fn: () => void }[] = [];
+
+  schedule(delayMs: number, fn: () => void): void {
+    this.scheduled.push({ at: this.t + delayMs, fn });
+  }
+
+  /** §6: phrase magic fires as a bonus on top of the single sigil cast. */
+  castPhrase(phraseId: string, manaCost: number): boolean {
+    if (this.player.mana < manaCost) return false;
+    this.player.mana -= manaCost;
+    this.emitMana();
+
+    switch (phraseId) {
+      case 'chain_surge': {
+        // instant 3-chain lightning from nearest
+        let current = this.nearestEnemy(this.player);
+        const hit = new Set<number>();
+        for (let i = 0; i < 3 && current; i++) {
+          hit.add(current.id);
+          const dmg = current.statuses.has('shock') ? 24 : 12;
+          this.damage(current, dmg, ['arc', 'lightning', 'phrase'], this.player);
+          current = this.nearestEnemy(current, (e) => !hit.has(e.id), 260);
+        }
+        break;
+      }
+      case 'fire_lance': {
+        // piercing great lance upward through the field + burn
+        const target = this.nearestEnemy(this.player);
+        const dir = target
+          ? norm(target.x - this.player.x, target.y - this.player.y)
+          : { x: 0, y: -1 };
+        this.spawnProjectile({
+          x: this.player.x,
+          y: this.player.y,
+          vx: dir.x * 700,
+          vy: dir.y * 700,
+          damage: 30,
+          radius: 24,
+          friendly: true,
+          pierce: 99,
+          tags: ['fire', 'lance', 'phrase'],
+          applyStatus: { status: 'burn', durationMs: 3000, dps: 4 },
+        });
+        break;
+      }
+      case 'thunderstorm': {
+        // 3s of field-wide strikes (§6)
+        for (let i = 0; i < 8; i++) {
+          this.schedule(i * 375, () => {
+            const targets = this.aliveEnemies;
+            if (!targets.length) return;
+            const e = targets[this.rngInt(targets.length)];
+            this.damage(e, 12, ['arc', 'lightning', 'phrase'], null);
+            this.bus.emit('onSpellCast', { sigil: 'ARC', x: e.x, y: e.y });
+          });
+        }
+        break;
+      }
+      default:
+        return false;
+    }
+    this.bus.emit('onPhraseCompleted', { phraseId });
+    return true;
+  }
+
+  private rngInt(n: number): number {
+    return Math.min(n - 1, Math.floor(this.rng.next() * n));
   }
 
   private updateEnemy(e: Enemy, dt: number): void {
@@ -299,6 +377,9 @@ export class CombatWorld {
           return;
         }
         this.damage(e, p.damage, p.tags, { x: p.x, y: p.y });
+        if (e.alive && p.applyStatus) {
+          this.applyStatus(e, p.applyStatus.status, p.applyStatus.durationMs, p.applyStatus.dps);
+        }
         if (p.pierce > 0) p.pierce--;
         else {
           p.alive = false;

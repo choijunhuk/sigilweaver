@@ -1,0 +1,11 @@
+{
+  "id": "burning_touch",
+  "name": "타오르는 인장",
+  "desc": "화염 마법 적중 시 화상(3초, 초당 4)",
+  "rarity": "common",
+  "hooks": [{
+    "trigger": "onSpellHit",
+    "condition": { "spellTag": "fire" },
+    "action": { "type": "applyStatus", "status": "burn", "durationMs": 3000, "dps": 4 }
+  }]
+}

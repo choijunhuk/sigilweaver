@@ -1,0 +1,7 @@
+{
+  "id": "split_bolt",
+  "name": "갈라지는 화살",
+  "desc": "Bolt가 3갈래로 발사된다",
+  "rarity": "rare",
+  "mods": { "boltSplit": true }
+}

@@ -1,0 +1,11 @@
+{
+  "id": "detonating_end",
+  "name": "폭발하는 최후",
+  "desc": "화상 상태의 적이 죽으면 폭발한다",
+  "rarity": "rare",
+  "hooks": [{
+    "trigger": "onEnemyDeath",
+    "condition": { "status": "burn" },
+    "action": { "type": "explode", "radius": 130, "damage": 12, "tags": ["fire", "explosion"] }
+  }]
+}
