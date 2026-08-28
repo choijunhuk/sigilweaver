@@ -18,18 +18,23 @@
 - 시스템 간 통신은 타입 정의된 EventBus 하나.
 - 콘텐츠는 `data/` JSON (zod 검증), 코드에 하드코딩 금지.
 
-## Phase 0 스파이크 현황
+## 현재 구조 (Phase 1 완료)
 
-Phase 0은 의도적으로 flat 구조다 (게임 코드 금지, §20). Phase 1에서 아래로 이관:
+```
+src/
+├── core/     EventBus(타입 이벤트맵), Rng(mulberry32 시드), log(카테고리, 릴리스 무음)
+├── cv/       camera(getUserMedia 720p), tracker(MediaPipe 래퍼) — Phaser 무관
+├── gesture/  features(정규화·특징), classify(규칙 5종), filter(FSM), types
+├── data/     schemas(zod), load(parseData — 로드 시 검증 실패는 즉시 throw)
+├── game/     main(Phaser 720×1280 세로) + scenes/ Boot→Menu→Game→Result
+└── debug/    spike(스파이크 HUD 페이지 /spike.html), draw(랜드마크 시각화)
+data/         config/gesture.json (임계값 — 코드에 하드코딩 없음)
+tests/        events, rng, data, classify(합성 특징), filter(FSM) — vitest 20개
+```
 
-| 스파이크 파일 | Phase 1 목적지 |
-|---|---|
-| `src/camera.ts`, `src/tracker.ts` | `src/cv/` |
-| `src/features.ts`, `src/classify.ts`, `src/filter.ts` | `src/gesture/` |
-| `src/draw.ts`, `src/main.ts` (HUD) | `src/debug/` (랜드마크 시각화) |
-| `src/types.ts` | `src/gesture/` + `src/data/` (GestureConfig) |
+진입점 2개: `index.html`(게임) / `spike.html`(제스처 스파이크·디버그 유지).
 
-스파이크 파이프라인 (구현됨):
+## 스파이크 파이프라인 (Phase 0에서 검증됨)
 1. `camera.ts` — getUserMedia 전면 카메라 480×640
 2. `tracker.ts` — Hand Landmarker (VIDEO 모드, GPU delegate, numHands 1)
 3. `features.ts` — 손목 원점 평행이동 + |손목→중지MCP| 스케일 정규화 + Left 미러

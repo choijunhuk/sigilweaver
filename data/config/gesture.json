@@ -1,0 +1,10 @@
+{
+  "curlBent": 0.6,
+  "curlStraight": 0.25,
+  "pinchMax": 0.25,
+  "vSpreadMin": 0.35,
+  "stableFrames": 4,
+  "minConfidence": 0.15,
+  "releaseConfidence": 0.05,
+  "debounceMs": 300
+}
