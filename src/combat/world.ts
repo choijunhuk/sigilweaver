@@ -133,13 +133,16 @@ export class CombatWorld {
         this.player.mana -= a.manaCost;
         this.emitMana();
         let current: Enemy | null = first;
+        let from: Vec2 = this.player;
         const hit = new Set<number>();
         const totalChains = a.chains + this.mods.arcChains;
         for (let i = 0; i <= totalChains && current; i++) {
           hit.add(current.id);
+          this.bus.emit('onLightning', { x1: from.x, y1: from.y, x2: current.x, y2: current.y });
           const dmg = current.statuses.has('shock') ? a.damage * 2 : a.damage;
           this.damage(current, dmg, ['arc', 'lightning'], this.player);
-          current = this.nearestEnemy(current, (e) => !hit.has(e.id), a.chainRange);
+          from = current;
+          current = this.nearestEnemy(from, (e) => !hit.has(e.id), a.chainRange);
         }
         this.cooldowns.set(cdKey, this.t + a.cooldownMs);
         break;
@@ -220,12 +223,15 @@ export class CombatWorld {
       case 'chain_surge': {
         // instant 3-chain lightning from nearest
         let current = this.nearestEnemy(this.player);
+        let from: Vec2 = this.player;
         const hit = new Set<number>();
         for (let i = 0; i < 3 && current; i++) {
           hit.add(current.id);
+          this.bus.emit('onLightning', { x1: from.x, y1: from.y, x2: current.x, y2: current.y });
           const dmg = current.statuses.has('shock') ? 24 : 12;
           this.damage(current, dmg, ['arc', 'lightning', 'phrase'], this.player);
-          current = this.nearestEnemy(current, (e) => !hit.has(e.id), 260);
+          from = current;
+          current = this.nearestEnemy(from, (e) => !hit.has(e.id), 260);
         }
         break;
       }
@@ -256,8 +262,8 @@ export class CombatWorld {
             const targets = this.aliveEnemies;
             if (!targets.length) return;
             const e = targets[this.rngInt(targets.length)];
+            this.bus.emit('onLightning', { x1: e.x, y1: -40, x2: e.x, y2: e.y });
             this.damage(e, 12, ['arc', 'lightning', 'phrase'], null);
-            this.bus.emit('onSpellCast', { sigil: 'ARC', x: e.x, y: e.y });
           });
         }
         break;
@@ -352,6 +358,7 @@ export class CombatWorld {
     if (p.aoe) {
       // telegraphed ground AOE: detonates at fixed point/time
       if (this.t >= p.aoe.at) {
+        this.bus.emit('onExplosion', { x: p.aoe.tx, y: p.aoe.ty, radius: p.aoe.radius });
         const d = Math.hypot(this.player.x - p.aoe.tx, this.player.y - p.aoe.ty);
         if (d <= p.aoe.radius) this.hitPlayer(p.damage, null);
         p.alive = false;
@@ -440,6 +447,7 @@ export class CombatWorld {
   }
 
   explode(x: number, y: number, radius: number, dmg: number, tags: string[]): void {
+    this.bus.emit('onExplosion', { x, y, radius });
     for (const e of this.aliveEnemies) {
       if (Math.hypot(e.x - x, e.y - y) <= radius + e.def.radius) {
         this.damage(e, dmg, tags, null);

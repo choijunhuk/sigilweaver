@@ -19,6 +19,9 @@ export interface EventMap {
   onRoomStarted: { index: number; type: string };
   onRoomCleared: { index: number };
   onRunCleared: Record<string, never>;
+  // vfx source events
+  onLightning: { x1: number; y1: number; x2: number; y2: number };
+  onExplosion: { x: number; y: number; radius: number };
   // boss (침묵의 서기관 §8)
   onBossSeal: { tokens: string[]; deadlineMs: number };
   onBossSealBroken: Record<string, never>;
