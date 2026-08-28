@@ -35,14 +35,17 @@ HUD 표시 항목:
 | Arc ✌ | 20 | | | |
 | Focus 🤏 | 20 | | | |
 
-### Android 실기기 (기기명: )
+### Android 실기기 (Samsung, R3CX10PCWCW)
 
-- 추론 fps: / 추론 시간: ms
-- 확정 지연: ms (인장별 last fire latency 관찰 범위)
-- 렌더 fps:
-- 체감 이슈:
+- 추론 21fps / 추론 시간 39ms — 목표 ≥15fps **충족**
+- 확정 지연: 이론치 4프레임 ÷ 21fps ≈ 190ms (데스크톱 관측 134ms) — 목표 ≤400ms **충족**
+- 렌더 55fps — 목표 60fps에 근소 미달 (스파이크 오버레이 기준)
+- 정확도: 사용자 측정 20회 중 20회 정인식 (목표 ≥18/20 **충족**), 오인식 불만 없음
+- FOV 이슈 발견·수정: 저해상도 요청 시 센서 크롭 → 720p + resizeMode none (DECISIONS.md)
 
 ## 판정
 
-- Exit Criteria 충족 여부:
-- 폴백 필요 여부 (Web Worker / 해상도 조정 / lite 모델):
+- **Exit Criteria: 통과 (조건부).** 추론 fps·확정 지연·정확도 충족.
+  렌더 55fps는 스파이크 페이지(rAF + 캔버스 오버레이) 측정치로, 게임 렌더는
+  Phase 3에서 Phaser 기준 재측정한다. 미달 시 추론 스로틀 하향(24→15fps) 여지 있음.
+- 폴백 (Web Worker / lite 모델): 현재 불필요. 실기기 프레임 예산 부족해지면 재검토.
