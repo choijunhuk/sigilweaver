@@ -1,10 +1,15 @@
-import { startCamera } from './camera';
-import { createTracker } from './tracker';
-import { extractFeatures } from './features';
-import { classify } from './classify';
-import { TemporalFilter, type GestureEvent } from './filter';
+import { startCamera } from '../cv/camera';
+import { createTracker } from '../cv/tracker';
+import { extractFeatures } from '../gesture/features';
+import { classify } from '../gesture/classify';
+import { TemporalFilter, type GestureEvent } from '../gesture/filter';
 import { drawHand, drawProgressRing } from './draw';
-import { DEFAULT_CONFIG, type Sigil } from './types';
+import type { Sigil } from '../gesture/types';
+import { GestureConfigSchema } from '../data/schemas';
+import { parseData } from '../data/load';
+import rawGestureCfg from '../../data/config/gesture.json';
+
+const CONFIG = parseData(GestureConfigSchema, rawGestureCfg, 'data/config/gesture.json');
 
 const SIGIL_LABEL: Record<Sigil, string> = {
   BOLT: '☝ BOLT', WARD: '✊ WARD', PULSE: '🖐 PULSE', ARC: '✌ ARC', FOCUS: '🤏 FOCUS', NONE: '',
@@ -49,7 +54,7 @@ async function run(): Promise<void> {
   startEl.style.display = 'none';
 
   const ctx = overlay.getContext('2d')!;
-  const filter = new TemporalFilter(DEFAULT_CONFIG);
+  const filter = new TemporalFilter(CONFIG);
   let lastInferAt = 0;
   let landmarks: ReturnType<typeof tracker.detectForVideo>['landmarks'][0] | undefined;
 
@@ -76,7 +81,7 @@ async function run(): Promise<void> {
         lastHandSeenAt = now;
         const handedness = (result.handedness[0]?.[0]?.categoryName ?? 'Right') as 'Left' | 'Right';
         const features = extractFeatures(landmarks, handedness);
-        const cls = classify(features, DEFAULT_CONFIG);
+        const cls = classify(features, CONFIG);
         const ev = filter.update(cls, now);
         if (ev) onFire(ev);
         updateHud(cls.sigil, cls.confidence, features.curls);
