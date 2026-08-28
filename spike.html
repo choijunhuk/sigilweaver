@@ -46,6 +46,12 @@
     <div id="flash"></div>
     <div id="hud"></div>
     <div id="gesture"></div>
+    <div id="recorder" style="position:absolute; top:8px; right:8px; display:flex; gap:6px; align-items:center; z-index:5;">
+      <select id="recLabel" style="font-family:inherit; font-size:12px; background:#1a1f2e; color:#cdd6f4; border:1px solid #2a2f45; border-radius:6px; padding:4px;">
+        <option>BOLT</option><option>WARD</option><option>PULSE</option><option>ARC</option><option>FOCUS</option><option>MIXED</option>
+      </select>
+      <button id="recBtn" style="font-family:inherit; font-size:12px; background:#1a1f2e; color:#cdd6f4; border:1px solid #2a2f45; border-radius:6px; padding:4px 10px;">● REC</button>
+    </div>
     <div id="start">
       <button id="startBtn">카메라 시작</button>
       <p>전면 카메라로 손을 인식합니다.<br>영상은 저장/전송되지 않습니다.</p>

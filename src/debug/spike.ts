@@ -9,7 +9,37 @@ import { GestureConfigSchema } from '../data/schemas';
 import { parseData } from '../data/load';
 import rawGestureCfg from '../../data/config/gesture.json';
 
+import { packLandmarks, type RecordedFrame } from '../gesture/recording';
+
 const CONFIG = parseData(GestureConfigSchema, rawGestureCfg, 'data/config/gesture.json');
+
+// Landmark recorder (§17): captures the stream, downloads a fixture JSON.
+const recBtn = document.getElementById('recBtn') as HTMLButtonElement;
+const recLabel = document.getElementById('recLabel') as HTMLSelectElement;
+let recording: RecordedFrame[] | null = null;
+let recStartAt = 0;
+
+recBtn.onclick = () => {
+  if (recording) {
+    const blob = new Blob(
+      [JSON.stringify({ version: 1, label: recLabel.value, frames: recording })],
+      { type: 'application/json' },
+    );
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${recLabel.value.toLowerCase()}-${Date.now() % 100000}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    recording = null;
+    recBtn.textContent = '● REC';
+    recBtn.style.color = '#cdd6f4';
+  } else {
+    recording = [];
+    recStartAt = performance.now();
+    recBtn.textContent = '■ STOP';
+    recBtn.style.color = '#ff6b6b';
+  }
+};
 
 const SIGIL_LABEL: Record<Sigil, string> = {
   BOLT: '☝ BOLT', WARD: '✊ WARD', PULSE: '🖐 PULSE', ARC: '✌ ARC', FOCUS: '🤏 FOCUS', NONE: '',
@@ -80,6 +110,9 @@ async function run(): Promise<void> {
       if (landmarks) {
         lastHandSeenAt = now;
         const handedness = (result.handedness[0]?.[0]?.categoryName ?? 'Right') as 'Left' | 'Right';
+        if (recording) {
+          recording.push({ t: now - recStartAt, handedness, lm: packLandmarks(landmarks) });
+        }
         const features = extractFeatures(landmarks, handedness);
         const cls = classify(features, CONFIG);
         const ev = filter.update(cls, now);
