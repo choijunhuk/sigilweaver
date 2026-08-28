@@ -1,0 +1,13 @@
+{
+  "id": "crawler",
+  "name": "크롤러",
+  "hp": 20,
+  "speed": 95,
+  "radius": 20,
+  "touchRange": 64,
+  "windupMs": 1500,
+  "attackDamage": 10,
+  "attackCooldownMs": 1200,
+  "cost": 10,
+  "color": "#ff5d5d"
+}
