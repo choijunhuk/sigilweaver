@@ -4,9 +4,7 @@ import { MenuScene } from './scenes/MenuScene';
 import { GameScene } from './scenes/GameScene';
 import { ResultScene } from './scenes/ResultScene';
 
-// Portrait logical resolution: top 2/3 battlefield, bottom 1/3 hand feedback (§3)
-export const GAME_WIDTH = 720;
-export const GAME_HEIGHT = 1280;
+import { GAME_WIDTH, GAME_HEIGHT } from './constants';
 
 new Phaser.Game({
   type: Phaser.AUTO,

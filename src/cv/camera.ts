@@ -19,3 +19,9 @@ export async function startCamera(video: HTMLVideoElement): Promise<void> {
   });
   await video.play();
 }
+
+export function stopCamera(video: HTMLVideoElement): void {
+  const stream = video.srcObject as MediaStream | null;
+  stream?.getTracks().forEach((t) => t.stop());
+  video.srcObject = null;
+}
