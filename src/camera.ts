@@ -1,13 +1,16 @@
-/** Front camera stream, downscaled (§15: short side ~256px is the inference
- * target; we request modest capture size and let MediaPipe handle the rest). */
+/** Front camera stream at full sensor FOV. Low resolution requests make many
+ * cameras crop (digital zoom) instead of scaling — the hand then only fits at
+ * arm's length. Request 720p + resizeMode 'none' to keep the wide view;
+ * MediaPipe downscales internally for inference so the cost stays the same. */
 export async function startCamera(video: HTMLVideoElement): Promise<void> {
   const stream = await navigator.mediaDevices.getUserMedia({
     video: {
       facingMode: 'user',
-      width: { ideal: 480 },
-      height: { ideal: 640 },
+      width: { ideal: 1280 },
+      height: { ideal: 720 },
       frameRate: { ideal: 30 },
-    },
+      resizeMode: { ideal: 'none' },
+    } as MediaTrackConstraints,
     audio: false,
   });
   video.srcObject = stream;
