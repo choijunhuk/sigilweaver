@@ -86,8 +86,9 @@ export class CalibrationScene extends Phaser.Scene {
     this.progText.setText(`${this.step}/${ORDER.length} 완료`);
   }
 
-  private finish(calibrated: boolean): void {
-    updateSave((s) => { s.calibrated = calibrated || s.calibrated; });
+  private finish(_completed: boolean): void {
+    // skipping also counts as "seen" — redo anytime from the menu
+    updateSave((s) => { s.calibrated = true; });
     this.scene.start('Menu');
   }
 }
