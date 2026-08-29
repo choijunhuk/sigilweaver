@@ -158,15 +158,15 @@ export class GameScene extends Phaser.Scene {
   /** 배경 분위기 (§13 미니멀 다크 판타지): 떠다니는 룬 문자 + 마나 먼지 */
   private buildAtmosphere(): void {
     const glyphs = 'ᚠᚢᚦᚨᚱᚲᛃᛇᛒᛗᛟᛞ';
-    for (let i = 0; i < 9; i++) {
+    for (let i = 0; i < 20; i++) {
       const t = this.add
         .text(
           40 + Math.random() * (GAME_WIDTH - 80),
           40 + Math.random() * (SPLIT_Y - 120),
           glyphs[Math.floor(Math.random() * glyphs.length)],
-          { fontFamily: 'serif', fontSize: `${22 + Math.random() * 22}px`, color: '#7c6cff' },
+          { fontFamily: 'serif', fontSize: `${20 + Math.random() * 26}px`, color: '#7c6cff' },
         )
-        .setAlpha(0.05 + Math.random() * 0.06)
+        .setAlpha(0.06 + Math.random() * 0.08)
         .setOrigin(0.5);
       this.tweens.add({
         targets: t,
